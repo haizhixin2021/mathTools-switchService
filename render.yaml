@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: mathTools-switchService
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: HF_TOKEN
+        sync: false
+      - key: SPACE_URL
+        sync: false
+      - key: WX_APP_ID
+        sync: false
+      - key: WX_APP_SECRET
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_ALGORITHM
+        sync: false
+        value: HS256
+      - key: TOKEN_EXPIRE_MINUTES
+        sync: false
+        value: 120
