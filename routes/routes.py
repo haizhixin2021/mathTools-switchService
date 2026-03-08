@@ -4,10 +4,29 @@ from datetime import timedelta
 from models import LoginRequest, ProxyRequest
 from utils import create_access_token, get_current_user
 from config import WX_APP_ID, WX_APP_SECRET, HF_TOKEN, SPACE_URL, TOKEN_EXPIRE_MINUTES
+import time
 
 router = APIRouter()
 
 # ================= 接口定义 =================
+
+@router.get("/health")
+async def health_check():
+    """
+    健康检查接口
+    返回服务状态和基本信息
+    """
+    return {
+        "status": "healthy",
+        "service": "mathTools-switchService",
+        "timestamp": int(time.time()),
+        "version": "1.0.0",
+        "endpoints": {
+            "login": "/login",
+            "proxy": "/proxy",
+            "health": "/health"
+        }
+    }
 
 @router.post("/login")
 async def login(request: LoginRequest):
@@ -73,45 +92,31 @@ async def proxy_hf_request(
     """
     print(f"用户 {current_user} 正在请求 HF 服务...")
     print(f"请求URL: {SPACE_URL}")
-    print(f"请求内容: {request.inputs}")
+    print(f"请求数据: {request.inputs}")
     
     headers = {
         "Authorization": f"Bearer {HF_TOKEN}",
         "Content-Type": "application/json"
     }
-
-    # 从 inputs 中获取实际的请求路径和数据
-    inputs = request.inputs
-    path = inputs.get("path", "")
-    data = inputs.get("data", {})
-    method = inputs.get("method", "POST")  # 默认使用 POST 方法
-
-    
-    # 构建完整的请求 URL
-    target_url = f"{SPACE_URL}{path}"
-
-    print(f"目标URL: {target_url}")
-    print(f"请求数据: {data}")
-    print(f"请求方法: {method}")
-
     
     async with httpx.AsyncClient() as client:
         try:
-            # 根据方法发送请求
-            if method.upper() == "GET":
-                # GET 请求使用 params
+            # 首先尝试POST方法
+            print("尝试POST方法...")
+            response = await client.post(
+                SPACE_URL, 
+                json=request.inputs, 
+                headers=headers, 
+                timeout=30.0
+            )
+            
+            # 如果POST失败，尝试GET方法
+            if response.status_code == 405:
+                print("POST方法不被允许，尝试GET方法...")
                 response = await client.get(
-                    target_url,
-                    params=data,
+                    SPACE_URL,
+                    params=request.inputs,
                     headers=headers,
-                    timeout=30.0
-                )
-            else:
-                # POST 等其他方法使用 json
-                response = await client.post(
-                    target_url, 
-                    json=data, 
-                    headers=headers, 
                     timeout=30.0
                 )
             
