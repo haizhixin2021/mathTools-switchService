@@ -1,0 +1,13 @@
+name: Keep Render Alive
+on:
+  schedule:
+    - cron: '*/12 * * * *' # 每 12 分钟运行一次
+  workflow_dispatch: # 允许手动触发
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Render Service
+        run: |-
+          curl -X get "https://mathtools-switchservice.onrender.com/health" || true
