@@ -10,4 +10,4 @@ jobs:
     steps:
       - name: Ping Render Service
         run: |-
-          curl -X get "https://mathtools-switchservice.onrender.com/health" || true
+          curl -X GET "https://mathtools-switchservice.onrender.com/health" || true
