@@ -92,31 +92,44 @@ async def proxy_hf_request(
     """
     print(f"用户 {current_user} 正在请求 HF 服务...")
     print(f"请求URL: {SPACE_URL}")
-    print(f"请求数据: {request.inputs}")
+    print(f"请求内容: {request.inputs}")
     
     headers = {
         "Authorization": f"Bearer {HF_TOKEN}",
         "Content-Type": "application/json"
     }
+
+    # 从 inputs 中获取实际的请求路径和数据
+    inputs = request.inputs
+    path = inputs.get("path", "")
+    data = inputs.get("data", {})
+    method = inputs.get("method", "POST")  # 默认使用 POST 方法
+
+    
+    # 构建完整的请求 URL
+    target_url = f"{SPACE_URL}{path}"
+
+    print(f"目标URL: {target_url}")
+    print(f"请求数据: {data}")
+    print(f"请求方法: {method}")
     
     async with httpx.AsyncClient() as client:
         try:
-            # 首先尝试POST方法
-            print("尝试POST方法...")
-            response = await client.post(
-                SPACE_URL, 
-                json=request.inputs, 
-                headers=headers, 
-                timeout=30.0
-            )
-            
-            # 如果POST失败，尝试GET方法
-            if response.status_code == 405:
-                print("POST方法不被允许，尝试GET方法...")
+            # 根据方法发送请求
+            if method.upper() == "GET":
+                # GET 请求使用 params
                 response = await client.get(
-                    SPACE_URL,
-                    params=request.inputs,
+                    target_url,
+                    params=data,
                     headers=headers,
+                    timeout=30.0
+                )
+            else:
+                # POST 等其他方法使用 json
+                response = await client.post(
+                    target_url, 
+                    json=data, 
+                    headers=headers, 
                     timeout=30.0
                 )
             
