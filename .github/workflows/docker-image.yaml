@@ -7,8 +7,8 @@ on:
   workflow_dispatch:
 
 env:
-  APP_NAME: mathTools-switchService
-  DOCKERHUB_REPO: haizhixin2021/mathTools-switchService
+  APP_NAME: mathtools-switchservice
+  DOCKERHUB_REPO: haizhixin2021/mathtools-switchservice
 
 jobs:
   docker:
